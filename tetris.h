@@ -25,14 +25,15 @@ enum Direction{
 };
 
 struct Block{
-    int x, y;
-    QImage texture;
-    QList<QPoint> shape;
+    int x, y;                //current position of the block
+    double maxX, maxY, maxC; //max allowed average x, y and distance to center (c because a²+b²=c², a = x, b = y)
+    QImage texture;          //texture of tiles of the block
+    QList<QPoint> shape;     //shape of the block (1 point is 1 tile)
 };
 
-struct Tile{
-    int x, y;
-    QImage texture;
+struct Tile{                 //part of a Block
+    int x, y;                //position of the tile
+    QImage texture;          //texture of the Tile
 };
 
 struct Level{
@@ -47,21 +48,6 @@ struct Scene{
     Block next;
     QList<Tile> landed;
 };
-
-//shapes:   {{0,0,0,0}      {{0,0,0,0}      {{0,0,0,0}
-//          ,{0,1,1,0}      ,{1,1,0,0}      ,{0,0,1,1}
-//          ,{0,1,1,0}      ,{0,1,1,0}      ,{0,1,1,0}
-//          ,{0,0,0,0}}     ,{0,0,0,0}}     ,{0,0,0,0}}
-//
-//          {{0,1,0,0}      {{0,0,0,0}      {{0,1,1,0}
-//          ,{0,1,0,0}      ,{0,1,1,1}      ,{0,1,0,0}
-//          ,{0,1,0,0}      ,{0,0,1,0}      ,{0,1,0,0}
-//          ,{0,1,0,0}}     ,{0,0,0,0}}     ,{0,0,0,0}}
-//
-//          {{0,1,1,0}
-//          ,{0,0,1,0}
-//          ,{0,0,1,0}
-//          ,{0,0,0,0}}
 
 namespace Ui {
 class Tetris;
@@ -86,6 +72,8 @@ public slots:
     void blockToTiles();    //convert current block to tiles
     Block rotateBlock(Block block);
     Block centerBlock(Block block);
+    Block moveBlock(Block block, int x, int y);
+    QList<double> checkCentered(Block block);
     bool checkColissionRight(Block block);
     bool checkColissionLeft(Block block);
     bool checkColissionBottom(Block block);

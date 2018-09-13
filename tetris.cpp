@@ -234,47 +234,74 @@ Block Tetris::rotateBlock(Block block)
 
 Block Tetris::centerBlock(Block block)
 {
-    Block centered = block;
-    for(int i = 0; i < centered.shape.size(); i++){
-        centered.shape.replace(i, QPoint(centered.shape.at(i).x()-1, centered.shape.at(i).y()-1));
+    Block centered;
+    double maxX = block.maxX, maxY = block.maxY;
+    QList<double> listC = checkCentered(block);
+    if(listC.last() < block.maxC){
+        qDebug()<<"centered";
+        return block;
     }
-    double averageX, averageY, max = 1.0;
-    double tmpX = 0.0, tmpY = 0.0;
-    for(int i = 0; i < centered.shape.size(); i++){
-        tmpX += centered.shape.at(i).x();
-        tmpY += centered.shape.at(i).y();
-    }
-    averageX = tmpX/centered.shape.size();
-    averageY = tmpY/centered.shape.size();
-    while(!((averageX > max|| averageX < -max)&&(averageY > max|| averageY < -max))){
-        if(averageX > max){
-            for(int i = 0; i < centered.shape.size(); i++){
-                centered.shape.replace(i, QPoint(centered.shape.at(i).x()-1, centered.shape.at(i).y()));
-            }
+    else {
+        qDebug()<<"not centered";
+        double averageX = 0.0, averageY = 0.0;
+        for(int i = 0; i < block.shape.size(); i++){
+            averageX += ((double)block.shape.at(i).x())+0.5-2.0;
+            averageY += ((double)block.shape.at(i).y())+0.5-2.0;
         }
-        else if(averageX < -max){
-            for(int i = 0; i < centered.shape.size(); i++){
-                centered.shape.replace(i, QPoint(centered.shape.at(i).x()+1, centered.shape.at(i).y()));
-            }
+        qDebug()<<averageX<<":"<<averageY;
+        averageX /= (double)block.shape.size();
+        averageY /= (double)block.shape.size();
+        qDebug()<<averageX<<":"<<averageY;
+        if(averageX > maxX){
+            block = moveBlock(block, -1, 0);
+            qDebug()<<"too far rigth";
         }
-        if(averageY > max){
-            for(int i = 0; i < centered.shape.size(); i++){
-                centered.shape.replace(i, QPoint(centered.shape.at(i).x(), centered.shape.at(i).y()-1));
-            }
+        else if(averageX < -maxX){
+            block = moveBlock(block, 1, 0);
+            qDebug()<<"too far left";
         }
-        else if(averageY < -max){
-            for(int i = 0; i < centered.shape.size(); i++){
-                centered.shape.replace(i, QPoint(centered.shape.at(i).x(), centered.shape.at(i).y()+1));
-            }
+        if(averageY > maxY){
+            block = moveBlock(block, 0, -1);
+            qDebug()<<"too high";
         }
-        for(int i = 0; i < centered.shape.size(); i++){
-            tmpX += centered.shape.at(i).x()-1.5;
-            tmpY += centered.shape.at(i).y()-1.5;
+        else if(averageY < -maxY){
+            block = moveBlock(block, 0, 1);
+            qDebug()<<"too low";
         }
-        averageX = tmpX/centered.shape.size();
-        averageY = tmpY/centered.shape.size();
+        centered = centerBlock(block);
     }
     return centered;
+}
+
+Block Tetris::moveBlock(Block block, int x, int y)
+{
+    for(int i = 0; i < block.shape.size(); i++){
+        block.shape.replace(i, QPoint(\
+                block.shape.at(i).x() + x,\
+                block.shape.at(i).y() + y));
+    }
+    return block;
+}
+
+QList<double> Tetris::checkCentered(Block block)
+{
+    qDebug()<<"start";
+    double averageC = 0.0;
+    QList<double> listC;
+    for(int i = 0; i < block.shape.size(); i++){
+        double x, y, c, diffx, diffy;
+        x = block.shape.at(i).x()+0.5;
+        y = block.shape.at(i).y()+0.5;
+        diffx = x-2.0;
+        diffy = y-2.0;
+        c = sqrt(diffx*diffx+diffy*diffy);
+        listC.append(c);
+        averageC += c;
+    }
+    averageC /= 4;
+    listC.append(averageC);
+    qDebug()<<averageC<<":"<<listC<<"\nend";
+    return listC;
 }
 
 bool Tetris::checkColissionRight(Block block)
@@ -365,12 +392,13 @@ void Tetris::nextBlock()
             ui->rowsLabel->setText(QString("Zeilen:\n"+QString::number(rowsCompleted)));
         }
     }
-    ui->scoreLabel->setText("score:\n"+QString::number(score));
+    ui->scoreLabel->setText("Score:\n"+QString::number(score));
     if(checkColissionBottom(scene.next)){
         scene.current = scene.next;
         scene.next = blocks.at(rand()%(blocks.size()));
-        if(rand()%2 == 1)
+        for(int r = rand()%4; r > 0; r--)
             scene.next = rotateBlock(scene.next);
+        //scene.next = centerBlock(scene.next);
         renderNext();
     }
     else{
@@ -378,7 +406,9 @@ void Tetris::nextBlock()
         scene.landed.clear();
         rowsCompleted = 0;
         level = 0;
+        score = 0;
         nextLevel();
+        ui->scoreLabel->setText("Score:\n"+QString::number(score));
         ui->rowsLabel->setText(QString("Zeilen:\n"+QString::number(rowsCompleted)));
     }
 }
@@ -416,6 +446,13 @@ void Tetris::loadMods(QString filename)
                     point.setY(tmp.split(",").last().toInt());
                     current.shape.append(point);
                 }
+            }
+            xmlReader->readNextStartElement();
+            xmlReader->readNextStartElement();
+            if(xmlReader->name() == "borders"){
+                current.maxX = xmlReader->attributes().at(0).value().toDouble();
+                current.maxY = xmlReader->attributes().at(1).value().toDouble();
+                current.maxC = xmlReader->attributes().at(2).value().toDouble();
             }
             current.x = 6;
             current.y = 0;
