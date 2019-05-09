@@ -1,8 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>Blocks.xml</file>
-        <file>Textures/std.png</file>
-        <file>Textures/plain.png</file>
-        <file>Textures/rounded.png</file>
-    </qresource>
-</RCC>

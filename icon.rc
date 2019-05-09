@@ -1,0 +1,24 @@
+MAINICON ICON "assets/icons/icon.ico"
+1 VERSIONINFO
+FILEVERSION     0,1,0,0
+PRODUCTVERSION  0,1,0,0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040704E4"
+    BEGIN
+      VALUE "CompanyName", "Company"
+      VALUE "FileDescription", "Tetris"
+      VALUE "FileVersion", "0.1"
+      VALUE "InternalName", "Tetris"
+      VALUE "LegalCopyright", "Galaxyqasar"
+      VALUE "OriginalFilename", "Tetris.exe"
+      VALUE "ProductName", "Tetris"
+      VALUE "ProductVersion", "0.1"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0407, 1252
+  END
+END
